@@ -1,6 +1,6 @@
 import React from 'react';
-import { LayoutDashboard, FileText, Database, Settings, BarChart, Users, ClipboardList } from 'lucide-react';
-import { Indicator, Role, SidebarItem, Plan } from './types';
+import { LayoutDashboard, FileText, Database, Settings, BarChart, Users, ClipboardList, Layout } from 'lucide-react';
+import { Indicator, Role, SidebarItem, Plan, ReportTemplate } from './types';
 
 export const SIDEBAR_ITEMS: SidebarItem[] = [
   {
@@ -37,6 +37,11 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
     id: 'indicator_auth',
     label: '指标权限',
     icon: <BarChart size={20} />,
+  },
+  {
+    id: 'report_template',
+    label: '报告模版',
+    icon: <Layout size={20} />,
   },
 ];
 
@@ -105,4 +110,8 @@ export const PLANS: Plan[] = [
   { id: 'p6', name: '公立医院高质量发展', indicatorCount: 2, remark: '无', status: 'enabled', application: '医疗质量管理' },
   { id: 'p8', name: '市级医院综合质量考核', indicatorCount: 1, remark: '无', status: 'enabled', application: '三级医院等级评审' },
   { id: 'p13', name: '三级医院等级评审（福建）', indicatorCount: 7, remark: '测试备注长度1234测试备注长度1234测试备注长度1234测试备注长度1234测试备注长度1234测试备注长度1234测试备注长度...', status: 'enabled', application: '三级医院等级评审' },
+];
+
+export const REPORT_TEMPLATES: ReportTemplate[] = [
+  { id: 't1', name: '报告模版名称', type: '全院', creator: '赵伟峰' }
 ];

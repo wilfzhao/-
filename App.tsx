@@ -1,9 +1,12 @@
+
 import React, { useState } from 'react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import RoleList from './components/RoleList';
 import PermissionTable from './components/PermissionTable';
 import PlanManagement from './components/PlanManagement';
+import ReportTemplates from './components/ReportTemplates';
+import ReportEditor from './components/ReportEditor';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState('indicator_auth');
@@ -22,10 +25,18 @@ const App: React.FC = () => {
     }
   };
 
+  const handleEditReport = (id: string) => {
+    setCurrentView('report_editor');
+  };
+
   const renderContent = () => {
     switch (currentView) {
       case 'plan_mgmt':
         return <PlanManagement onAddPlan={handleAddHeaderItem} />;
+      case 'report_template':
+        return <ReportTemplates onEdit={handleEditReport} />;
+      case 'report_editor':
+        return <ReportEditor onBack={() => setCurrentView('report_template')} />;
       case 'indicator_auth':
         return (
           <>
@@ -44,6 +55,15 @@ const App: React.FC = () => {
         );
     }
   };
+
+  // If in editor mode, render full screen without standard layout
+  if (currentView === 'report_editor') {
+    return (
+      <div className="h-screen overflow-hidden font-sans">
+        {renderContent()}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen bg-gray-100 overflow-hidden font-sans">

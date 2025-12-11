@@ -36,6 +36,13 @@ export interface Plan {
   application?: string;
 }
 
+export interface ReportTemplate {
+  id: string;
+  name: string;
+  type: string;
+  creator: string;
+}
+
 export enum TabType {
   INDICATOR_PERMISSION = 'INDICATOR_PERMISSION',
   PERSONNEL = 'PERSONNEL',
