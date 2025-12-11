@@ -27,6 +27,15 @@ export interface Indicator {
   tag?: 'sub' | 'main';
 }
 
+export interface Plan {
+  id: string;
+  name: string;
+  indicatorCount: number;
+  remark: string;
+  status: 'enabled' | 'disabled';
+  application?: string;
+}
+
 export enum TabType {
   INDICATOR_PERMISSION = 'INDICATOR_PERMISSION',
   PERSONNEL = 'PERSONNEL',

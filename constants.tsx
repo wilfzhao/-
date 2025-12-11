@@ -1,6 +1,6 @@
 import React from 'react';
 import { LayoutDashboard, FileText, Database, Settings, BarChart, Users, ClipboardList } from 'lucide-react';
-import { Indicator, Role, SidebarItem } from './types';
+import { Indicator, Role, SidebarItem, Plan } from './types';
 
 export const SIDEBAR_ITEMS: SidebarItem[] = [
   {
@@ -37,7 +37,6 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
     id: 'indicator_auth',
     label: '指标权限',
     icon: <BarChart size={20} />,
-    active: true,
   },
 ];
 
@@ -93,9 +92,17 @@ export const INDICATORS: Indicator[] = [
         fillPermission: false,
         displayEntry: true,
         children: [
-          { id: '10', name: '填报配置测试四', scheme: '三级医院等级评审', readPermission: true, fillPermission: false, displayEntry: true }, // Simulating the active blue switch
+          { id: '10', name: '填报配置测试四', scheme: '三级医院等级评审', readPermission: true, fillPermission: false, displayEntry: true }, 
         ]
       },
     ]
   },
+];
+
+export const PLANS: Plan[] = [
+  { id: 'p4', name: '三级医院等级评审', indicatorCount: 237, remark: '无', status: 'enabled', application: '三级医院等级评审' },
+  { id: 'p5', name: '三级公立医院绩效考核（2022）', indicatorCount: 64, remark: '无', status: 'enabled', application: '公立医院绩效考核' },
+  { id: 'p6', name: '公立医院高质量发展', indicatorCount: 2, remark: '无', status: 'enabled', application: '医疗质量管理' },
+  { id: 'p8', name: '市级医院综合质量考核', indicatorCount: 1, remark: '无', status: 'enabled', application: '三级医院等级评审' },
+  { id: 'p13', name: '三级医院等级评审（福建）', indicatorCount: 7, remark: '测试备注长度1234测试备注长度1234测试备注长度1234测试备注长度1234测试备注长度1234测试备注长度1234测试备注长度...', status: 'enabled', application: '三级医院等级评审' },
 ];

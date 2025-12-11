@@ -1,7 +1,33 @@
-import React from 'react';
-import { Grid, Settings, Bell, User, Layout, BarChart2, Activity } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Grid, Settings, Activity, MoreHorizontal, ChevronDown } from 'lucide-react';
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  items: string[];
+}
+
+const Header: React.FC<HeaderProps> = ({ items }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const visibleItems = items.slice(0, 7);
+  const overflowItems = items.slice(7);
+  const hasOverflow = overflowItems.length > 0;
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
+
   return (
     <header className="h-14 bg-blue-600 text-white flex items-center justify-between px-4 shadow-md sticky top-0 z-50">
       <div className="flex items-center gap-8">
@@ -13,7 +39,7 @@ const Header: React.FC = () => {
         </div>
         
         <nav className="hidden md:flex items-center gap-1">
-          {['医院等级评审', '公立医院绩效考核', '指标管理中心', '管理配置', '运营决策中心'].map((item, index) => (
+          {visibleItems.map((item, index) => (
             <button 
               key={index}
               className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
@@ -28,6 +54,33 @@ const Header: React.FC = () => {
               </div>
             </button>
           ))}
+
+          {hasOverflow && (
+            <div className="relative" ref={menuRef}>
+              <button 
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1 ${
+                   isMenuOpen ? 'bg-blue-700/50 text-white' : 'text-blue-100 hover:bg-blue-500/50 hover:text-white'
+                }`}
+              >
+                <MoreHorizontal size={16} />
+                <ChevronDown size={12} className={`transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isMenuOpen && (
+                <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 animate-in fade-in zoom-in-95 duration-100">
+                  {overflowItems.map((item, index) => (
+                    <button
+                      key={index}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </nav>
       </div>
 
