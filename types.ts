@@ -24,6 +24,7 @@ export interface Indicator {
   fillPermission: boolean;
   displayEntry: boolean;
   children?: Indicator[];
+  tag?: 'sub' | 'main';
 }
 
 export enum TabType {

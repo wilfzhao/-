@@ -12,7 +12,7 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
     id: 'rule_mgmt',
     label: '规则管理',
     icon: <Settings size={20} />,
-    expanded: true,
+    expanded: false,
     subItems: [
       { id: 'rule_1', label: '基础规则', icon: null },
       { id: 'rule_2', label: '高级规则', icon: null }
@@ -22,7 +22,7 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
     id: 'base_data',
     label: '基础数据',
     icon: <Database size={20} />,
-    expanded: true,
+    expanded: false,
     subItems: [
       { id: 'data_1', label: '科室数据', icon: null },
       { id: 'data_2', label: '人员数据', icon: null }
@@ -55,10 +55,10 @@ export const INDICATORS: Indicator[] = [
     scheme: '三级医院等级评审',
     readPermission: false,
     fillPermission: false,
-    displayEntry: true,
+    displayEntry: false,
     children: [
-      { id: '1', name: '自定义统计方式指标 (基础指标二)', scheme: '', readPermission: false, fillPermission: false, displayEntry: false },
-      { id: '2', name: '自定义统计方式指标 (手动转自动)', scheme: '三级医院等级评审', readPermission: false, fillPermission: false, displayEntry: true },
+      { id: '1', name: '自定义统计方式指标 (基础指标二)', scheme: '', readPermission: false, fillPermission: false, displayEntry: false, tag: 'sub' },
+      { id: '2', name: '自定义统计方式指标 (手动转自动)', scheme: '三级医院等级评审', readPermission: false, fillPermission: false, displayEntry: false },
       { id: '3', name: '自定义统计方式指标 (手动转自动)', scheme: '三级医院等级评审', readPermission: true, fillPermission: false, displayEntry: true },
       { id: '4', name: '自定义统计方式指标 (复合指标一)', scheme: '三级医院等级评审', readPermission: false, fillPermission: false, displayEntry: false },
     ]
@@ -67,22 +67,22 @@ export const INDICATORS: Indicator[] = [
     id: 'g2',
     name: '医疗服务能力与医院质量安全',
     scheme: '三级医院等级评审',
-    readPermission: true,
+    readPermission: false,
     fillPermission: false,
-    displayEntry: true,
+    displayEntry: false,
     children: [
       { id: '5', name: '自定义统计方式指标 (基础指标一)', scheme: '三级医院等级评审', readPermission: false, fillPermission: false, displayEntry: false },
-      { id: '6', name: '自定义统计方式指标 (基础指标二)', scheme: '', readPermission: false, fillPermission: false, displayEntry: false },
-      { id: '7', name: '自定义统计方式指标 (基础指标一)', scheme: '三级医院等级评审', readPermission: false, fillPermission: false, displayEntry: true },
+      { id: '6', name: '自定义统计方式指标 (基础指标二)', scheme: '', readPermission: false, fillPermission: false, displayEntry: false, tag: 'sub' },
+      { id: '7', name: '自定义统计方式指标 (基础指标一)', scheme: '三级医院等级评审', readPermission: false, fillPermission: false, displayEntry: false },
     ]
   },
   {
     id: 'g3',
     name: '重点专业质量控制',
     scheme: '三级医院等级评审',
-    readPermission: true,
+    readPermission: false,
     fillPermission: false,
-    displayEntry: true,
+    displayEntry: false,
     children: [
       { id: '8', name: '填报配置测试十一', scheme: '三级医院等级评审', readPermission: false, fillPermission: false, displayEntry: false },
       {

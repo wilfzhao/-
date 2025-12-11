@@ -1,17 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ChevronDown, ChevronRight, ChevronLeft } from 'lucide-react';
 import { SidebarItem } from '../types';
 import { SIDEBAR_ITEMS } from '../constants';
 
 const Sidebar: React.FC = () => {
+  const [items, setItems] = useState<SidebarItem[]>(SIDEBAR_ITEMS);
+
+  const toggleExpand = (id: string) => {
+    setItems(items.map(item => 
+      item.id === id ? { ...item, expanded: !item.expanded } : item
+    ));
+  };
+
   return (
     <aside className="w-[240px] bg-white flex flex-col h-full border-r border-gray-100 flex-shrink-0 relative group">
       <div className="flex-1 overflow-y-auto py-4">
-        {SIDEBAR_ITEMS.map((item) => (
+        {items.map((item) => (
           <div key={item.id} className="mb-1">
             <div 
+              onClick={() => item.subItems && toggleExpand(item.id)}
               className={`
-                flex items-center justify-between px-4 py-3 cursor-pointer
+                flex items-center justify-between px-4 py-3 cursor-pointer select-none
                 ${item.active ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50'}
               `}
             >

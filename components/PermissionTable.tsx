@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { TabType, Indicator } from '../types';
 import { INDICATORS } from '../constants';
 import { Toggle } from './ui/Toggle';
+import { Checkbox } from './ui/Checkbox';
 import { Search, Info, ChevronLeft, ChevronRight, MoreHorizontal, ChevronDown } from 'lucide-react';
 
 const PermissionTable: React.FC = () => {
@@ -21,7 +22,95 @@ const PermissionTable: React.FC = () => {
     setExpandedIds(newExpanded);
   };
 
-  const togglePermission = (id: string, type: 'read' | 'fill' | 'display') => {
+  // Helper to check if a node has children
+  const hasChildren = (node: Indicator) => node.children && node.children.length > 0;
+
+  // 1. Dependency Logic (Single Node)
+  // Ensures: Fill -> Read -> Display
+  //          !Read -> !Fill, !Display
+  const applyDependencies = (node: Indicator, key: keyof Indicator, value: boolean): Indicator => {
+    const newNode = { ...node, [key]: value };
+
+    // Rule 1: Fill Permission -> Read + Display
+    if (key === 'fillPermission' && value === true) {
+      newNode.readPermission = true;
+      newNode.displayEntry = true;
+    }
+
+    // Rule 2: Read logic
+    if (key === 'readPermission') {
+      if (value === true) {
+        // Checking Read enables Display (default)
+        newNode.displayEntry = true;
+      } else {
+        // Unchecking Read disables Display and Fill
+        newNode.displayEntry = false;
+        newNode.fillPermission = false;
+      }
+    }
+
+    // Rule 3: Display logic
+    // Enforce: Cannot check display if read is false.
+    if (key === 'displayEntry' && value === true) {
+      if (!newNode.readPermission) {
+        newNode.displayEntry = false; // Prevent change
+      }
+    }
+
+    // Global Invariant: If Read is false, Display must be false.
+    // This catches edge cases and ensures consistency.
+    if (!newNode.readPermission) {
+       newNode.displayEntry = false;
+    }
+
+    // Rule for 'sub' tag: Display Entry is always false
+    if (newNode.tag === 'sub') {
+      newNode.displayEntry = false;
+    }
+
+    return newNode;
+  };
+
+  // 2. Cascade Logic (Top-Down)
+  // Applies the value and dependencies to a node and all its descendants recursively
+  const cascadeUpdate = (nodes: Indicator[], key: keyof Indicator, value: boolean): Indicator[] => {
+    return nodes.map((node) => {
+      let newNode = applyDependencies(node, key, value);
+      if (hasChildren(newNode)) {
+        newNode.children = cascadeUpdate(newNode.children!, key, value);
+      }
+      return newNode;
+    });
+  };
+
+  // 3. Synchronization Logic (Bottom-Up)
+  // Updates parents based on children's state.
+  // Parent is True only if ALL children are True.
+  const syncParents = (nodes: Indicator[]): Indicator[] => {
+    return nodes.map((node) => {
+      if (hasChildren(node)) {
+        // First, sync children recursively
+        const syncedChildren = syncParents(node.children!);
+        
+        // Then calculate parent state based on new children state
+        const allRead = syncedChildren.every(c => c.readPermission);
+        const allFill = syncedChildren.every(c => c.fillPermission);
+        const allDisplay = syncedChildren.every(c => c.displayEntry);
+
+        return {
+          ...node,
+          children: syncedChildren,
+          readPermission: allRead,
+          fillPermission: allFill,
+          displayEntry: allDisplay
+        };
+      }
+      return node;
+    });
+  };
+
+  // 4. Main Toggle Handler
+  const togglePermission = (targetId: string, type: 'read' | 'fill' | 'display') => {
     const targetKey =
       type === 'read'
         ? 'readPermission'
@@ -29,81 +118,76 @@ const PermissionTable: React.FC = () => {
         ? 'fillPermission'
         : 'displayEntry';
 
-    // Helper: Apply dependency logic (Logic 2 & 3 + Consistency)
-    const applyDependencies = (node: Indicator): Indicator => {
-      const newNode = { ...node };
-
-      // 3. 勾选填报权限，默认勾选查阅权限和展示入口
-      if (newNode.fillPermission) {
-        newNode.readPermission = true;
-        newNode.displayEntry = true;
-      }
-
-      // 2. 勾选查阅权限，默认勾选展示入口
-      if (newNode.readPermission) {
-        newNode.displayEntry = true;
-      }
-
-      // Backward consistency: If Display is off, cannot Read or Fill
-      if (!newNode.displayEntry) {
-        newNode.readPermission = false;
-        newNode.fillPermission = false;
-      }
-
-      // Backward consistency: If Read is off, cannot Fill
-      if (!newNode.readPermission) {
-        newNode.fillPermission = false;
-      }
-
-      return newNode;
-    };
-
-    // Helper: Recursively update children (Logic 1)
-    const updateChildren = (
-      nodes: Indicator[],
-      key: keyof Indicator,
-      value: boolean
-    ): Indicator[] => {
-      return nodes.map((node) => {
-        let newNode = { ...node, [key]: value };
-        // Apply dependencies to the child after setting the forced value
-        newNode = applyDependencies(newNode);
-
-        if (newNode.children) {
-          newNode.children = updateChildren(newNode.children, key, value);
+    // Step 1: Find the target node to determine the Next Value
+    let nextValue = true;
+    
+    const findAndDetermineValue = (nodes: Indicator[]) => {
+      for (const node of nodes) {
+        if (node.id === targetId) {
+          nextValue = !node[targetKey];
+          return;
         }
-        return newNode;
-      });
+        if (node.children) findAndDetermineValue(node.children);
+      }
     };
+    findAndDetermineValue(indicators);
 
-    // Main traversal
-    const updateTree = (nodes: Indicator[]): Indicator[] => {
+    // Step 2: Update the tree (Cascade Down)
+    const updateTargetAndCascade = (nodes: Indicator[]): Indicator[] => {
       return nodes.map((node) => {
-        // Found the target node
-        if (node.id === id) {
-          const newValue = !node[targetKey];
-          let newNode = { ...node, [targetKey]: newValue };
-
-          // Apply dependencies to current node
-          newNode = applyDependencies(newNode);
-
-          // 1. 勾选上级目录，自动勾选下级目录及指标。取消勾选同理
-          if (newNode.children) {
-            newNode.children = updateChildren(newNode.children, targetKey, newValue);
+        if (node.id === targetId) {
+          // Apply to self
+          let updatedNode = applyDependencies(node, targetKey, nextValue);
+          // Apply to children (Cascade)
+          if (hasChildren(updatedNode)) {
+             updatedNode.children = cascadeUpdate(updatedNode.children!, targetKey, nextValue);
           }
-          return newNode;
+          return updatedNode;
         }
-
-        // Recursively search deeper
         if (node.children) {
-          return { ...node, children: updateTree(node.children) };
+          return { ...node, children: updateTargetAndCascade(node.children) };
         }
-
         return node;
       });
     };
 
-    setIndicators(updateTree(indicators));
+    let newIndicators = updateTargetAndCascade(indicators);
+
+    // Step 3: Sync Parents (Bubble Up)
+    newIndicators = syncParents(newIndicators);
+
+    setIndicators(newIndicators);
+  };
+
+  // Helper to determine indeterminate state for rendering
+  const getCheckboxState = (node: Indicator, type: 'read' | 'fill' | 'display') => {
+    const key =
+      type === 'read'
+        ? 'readPermission'
+        : type === 'fill'
+        ? 'fillPermission'
+        : 'displayEntry';
+
+    const checked = node[key];
+    
+    if (!hasChildren(node)) {
+      return { checked, indeterminate: false };
+    }
+
+    const checkRecursive = (n: Indicator): boolean => {
+        const k = key as keyof Indicator;
+        if (n[k]) return true;
+        if (n.children) return n.children.some(checkRecursive);
+        return false;
+    };
+    
+    const isActuallyChecked = checked;
+    const isSomeChecked = checkRecursive(node);
+    
+    return {
+        checked: isActuallyChecked,
+        indeterminate: !isActuallyChecked && isSomeChecked
+    };
   };
 
   // Flatten the tree for rendering, respecting expanded state
@@ -199,9 +283,7 @@ const PermissionTable: React.FC = () => {
             <thead className="bg-gray-50 sticky top-0 z-10">
               <tr>
                 <th className="p-3 w-10 border-b border-gray-100">
-                    <input 
-                        type="checkbox" 
-                        className="rounded border-gray-300 text-blue-600 focus:ring-0 bg-white accent-blue-600"
+                    <Checkbox 
                         checked={selectAll}
                         onChange={() => setSelectAll(!selectAll)}
                     />
@@ -214,56 +296,70 @@ const PermissionTable: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {visibleRows.map((item) => (
-                <tr key={item.id} className="hover:bg-blue-50/30 transition-colors">
-                  <td className="p-3">
-                     <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-0 bg-white accent-blue-600" />
-                  </td>
-                  <td className="p-3 text-sm text-blue-600">
-                    <div className="flex items-center" style={{ paddingLeft: `${item.level * 24}px` }}>
-                       <div className="w-5 flex items-center justify-center flex-shrink-0 mr-1">
-                        {item.children && item.children.length > 0 && (
-                            <button onClick={() => toggleExpand(item.id)} className="text-gray-500 hover:text-blue-600 focus:outline-none">
-                                {expandedIds.has(item.id) ? <ChevronDown size={16}/> : <ChevronRight size={16}/>}
-                            </button>
-                        )}
-                       </div>
-                       <span className="cursor-pointer hover:underline truncate">{item.name}</span>
-                    </div>
-                  </td>
-                  <td className="p-3 text-sm text-gray-600">{item.scheme}</td>
-                  <td className="p-3 text-center">
-                    <div className="flex justify-center">
-                        <input 
-                            type="checkbox"
-                            checked={item.readPermission} 
-                            onChange={() => togglePermission(item.id, 'read')}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-0 bg-white accent-blue-600 w-4 h-4 cursor-pointer"
-                        />
-                    </div>
-                  </td>
-                  <td className="p-3 text-center">
-                    <div className="flex justify-center">
-                        <input 
-                            type="checkbox"
-                            checked={item.fillPermission} 
-                            onChange={() => togglePermission(item.id, 'fill')} 
-                            className="rounded border-gray-300 text-blue-600 focus:ring-0 bg-white accent-blue-600 w-4 h-4 cursor-pointer"
-                        />
-                    </div>
-                  </td>
-                  <td className="p-3 text-center">
-                    <div className="flex justify-center">
-                        <input 
-                            type="checkbox"
-                            checked={item.displayEntry} 
-                            onChange={() => togglePermission(item.id, 'display')} 
-                            className="rounded border-gray-300 text-blue-600 focus:ring-0 bg-white accent-blue-600 w-4 h-4 cursor-pointer"
-                        />
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {visibleRows.map((item) => {
+                const readState = getCheckboxState(item, 'read');
+                const fillState = getCheckboxState(item, 'fill');
+                const displayState = getCheckboxState(item, 'display');
+
+                const isSub = item.tag === 'sub';
+
+                // Disable Display Entry if Read Permission is completely missing (not checked and not indeterminate)
+                // OR if it is a 'sub' tag
+                const isReadDisabled = !readState.checked && !readState.indeterminate;
+                const isDisplayDisabled = isReadDisabled || isSub;
+
+                return (
+                  <tr key={item.id} className="hover:bg-blue-50/30 transition-colors">
+                    <td className="p-3">
+                       <Checkbox />
+                    </td>
+                    <td className={`p-3 text-sm ${isSub ? 'text-gray-500' : 'text-blue-600'}`}>
+                      <div className="flex items-center" style={{ paddingLeft: `${item.level * 24}px` }}>
+                         <div className="w-5 flex items-center justify-center flex-shrink-0 mr-1">
+                          {hasChildren(item) && (
+                              <button onClick={() => toggleExpand(item.id)} className="text-gray-500 hover:text-blue-600 focus:outline-none">
+                                  {expandedIds.has(item.id) ? <ChevronDown size={16}/> : <ChevronRight size={16}/>}
+                              </button>
+                          )}
+                         </div>
+                         <span className="cursor-pointer hover:underline truncate">{item.name}</span>
+                      </div>
+                    </td>
+                    <td className="p-3 text-sm text-gray-600">{item.scheme}</td>
+                    <td className="p-3 text-center">
+                      <div className="flex justify-center">
+                          <Checkbox 
+                              checked={readState.checked}
+                              indeterminate={readState.indeterminate}
+                              onChange={() => togglePermission(item.id, 'read')}
+                              className="w-4 h-4"
+                          />
+                      </div>
+                    </td>
+                    <td className="p-3 text-center">
+                      <div className="flex justify-center">
+                          <Checkbox 
+                              checked={fillState.checked}
+                              indeterminate={fillState.indeterminate}
+                              onChange={() => togglePermission(item.id, 'fill')}
+                              className="w-4 h-4"
+                          />
+                      </div>
+                    </td>
+                    <td className="p-3 text-center">
+                      <div className="flex justify-center">
+                          <Checkbox 
+                              checked={displayState.checked}
+                              indeterminate={displayState.indeterminate}
+                              onChange={() => togglePermission(item.id, 'display')}
+                              disabled={isDisplayDisabled}
+                              className="w-4 h-4"
+                          />
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
