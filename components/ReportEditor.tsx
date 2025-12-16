@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   ChevronLeft, Calendar, Settings, Eye, Search, 
   ChevronRight, ChevronDown, Type, List, AlignLeft, AlignCenter, AlignRight,
   Bold as BoldIcon, Italic as ItalicIcon, Underline as UnderlineIcon, Table as TableIcon, 
   Trash2, Info, X, Minus, Plus, BarChart as BarChartIcon,
   Wand2, Undo, Redo,
-  LayoutGrid, ArrowDownToLine, ArrowRightToLine, Columns, Rows, Merge, Split
+  LayoutGrid, ArrowDownToLine, ArrowRightToLine, Columns, Rows, Merge, Split,
+  Database, FileCode, Activity
 } from 'lucide-react';
 import { PLANS } from '../constants';
 
@@ -43,16 +45,185 @@ interface ChartSettings {
 }
 
 // ----------------------------------------------------------------------
-// 0. DATA TAG EXTENSION (Custom Node for [Value])
+// 0. INDICATOR INFO MODAL
+// ----------------------------------------------------------------------
+
+const IndicatorInfoModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-xl shadow-2xl w-[600px] overflow-hidden flex flex-col max-h-[90vh]">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-blue-50 to-white">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-blue-100 text-blue-600 rounded-md">
+              <Activity size={18} />
+            </div>
+            <h3 className="font-bold text-gray-800 text-lg">指标详情</h3>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 p-1 transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 overflow-y-auto space-y-6">
+          {/* Section 1: Basic Info */}
+          <div>
+            <h4 className="flex items-center gap-2 text-sm font-bold text-gray-800 mb-3 pb-2 border-b border-gray-50">
+              <Info size={16} className="text-blue-500" />
+              基本信息
+            </h4>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="space-y-1">
+                <span className="text-gray-500 block text-xs">指标名称</span>
+                <span className="text-gray-800 font-medium">住院患者身体约束率</span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-gray-500 block text-xs">指标编码</span>
+                <span className="text-gray-800 font-medium font-mono bg-gray-50 px-2 py-0.5 rounded">ZB_2024_0089</span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-gray-500 block text-xs">归属科室</span>
+                <span className="text-gray-800">护理部 / 医疗质量管理科</span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-gray-500 block text-xs">统计频次</span>
+                <span className="text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-xs inline-block">季度</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 2: Business Logic */}
+          <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+            <h4 className="flex items-center gap-2 text-sm font-bold text-gray-800 mb-2">
+              <FileCode size={16} className="text-purple-500" />
+              业务口径
+            </h4>
+            <p className="text-sm text-gray-600 leading-relaxed mb-3">
+              统计周期内，住院患者中实施身体约束的患者数占同期住院患者总数的比例。身体约束指使用任何物理或机械设备、材料或工具附加于或邻近患者身体，患者不能轻易将其移除，且限制了患者的自由活动或其正常接近自己身体的能力。
+            </p>
+            <div className="bg-white border border-gray-200 rounded p-3 text-xs font-mono text-gray-700">
+              计算公式 = ( 同期住院患者身体约束人数 / 同期住院患者总数 ) × 100%
+            </div>
+          </div>
+
+          {/* Section 3: Technical Info */}
+          <div>
+            <h4 className="flex items-center gap-2 text-sm font-bold text-gray-800 mb-3 pb-2 border-b border-gray-50">
+              <Database size={16} className="text-green-500" />
+              技术信息
+            </h4>
+            <div className="space-y-3">
+              <div className="flex items-start gap-2 text-sm">
+                <span className="text-gray-500 w-20 flex-shrink-0">数据源表：</span>
+                <span className="font-mono text-gray-700 bg-gray-50 px-1.5 rounded">DW_INPATIENT_QUALITY_FACT</span>
+              </div>
+              <div className="flex items-start gap-2 text-sm">
+                <span className="text-gray-500 w-20 flex-shrink-0">取值字段：</span>
+                <span className="font-mono text-gray-700 bg-gray-50 px-1.5 rounded">PHY_CONSTRAINT_COUNT, TOTAL_INPATIENT_COUNT</span>
+              </div>
+              <div className="flex items-start gap-2 text-sm">
+                <span className="text-gray-500 w-20 flex-shrink-0">更新时间：</span>
+                <span className="text-gray-700">每日 02:00:00 (T+1)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+          <button 
+            onClick={onClose}
+            className="px-4 py-2 bg-white border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50 font-medium shadow-sm transition-colors"
+          >
+            关闭
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+};
+
+// ----------------------------------------------------------------------
+// 1. DATA TAG EXTENSION (Custom Node for [Value])
 // ----------------------------------------------------------------------
 
 const DataTagComponent = ({ node }: any) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const hoverTimeoutRef = useRef<any>(null);
+
+  const handleMouseEnter = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    // Add delay to prevent flickering when moving to the tooltip across the gap
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsHovered(false);
+    }, 300);
+  };
+
   return (
-    <NodeViewWrapper as="span" className="inline-block align-middle">
-      <span className="inline-block rounded px-1.5 py-0.5 text-sm font-medium text-blue-600 border border-transparent hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition-colors cursor-default select-none">
-        {node.attrs.label}
-      </span>
-    </NodeViewWrapper>
+    <>
+      <NodeViewWrapper 
+        as="span" 
+        className="inline-block align-middle relative"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <span 
+          className={`
+            inline-block rounded px-1.5 py-0.5 text-sm font-medium transition-colors cursor-default select-none border
+            ${isHovered 
+              ? 'bg-blue-50 text-blue-700 border-blue-200' 
+              : 'text-blue-600 border-transparent hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200'}
+          `}
+        >
+          {node.attrs.label}
+        </span>
+
+        {/* Hover Toolbar */}
+        {isHovered && (
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 z-50 flex flex-col items-center animate-in fade-in slide-in-from-top-1 duration-150">
+            {/* Invisible bridge to cover the gap */}
+            <div className="absolute w-full h-3 -top-3 left-0 bg-transparent"></div>
+            
+            {/* Arrow */}
+            <div className="w-2 h-2 bg-white border-t border-l border-gray-200 transform rotate-45 mb-[-5px] z-10"></div>
+            
+            {/* Menu */}
+            <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-1 flex items-center gap-1 whitespace-nowrap z-0">
+              <button 
+                onClick={(e) => { e.stopPropagation(); setShowInfoModal(true); }}
+                className="flex items-center gap-1 px-2 py-1 hover:bg-blue-50 text-xs text-gray-700 hover:text-blue-600 rounded transition-colors"
+              >
+                <Info size={12} />
+                指标信息
+              </button>
+              <div className="w-px h-3 bg-gray-200"></div>
+              <button 
+                onClick={(e) => { e.stopPropagation(); /* Handle Param Logic */ }}
+                className="flex items-center gap-1 px-2 py-1 hover:bg-blue-50 text-xs text-gray-700 hover:text-blue-600 rounded transition-colors"
+              >
+                <Settings size={12} />
+                局部参数
+              </button>
+            </div>
+          </div>
+        )}
+      </NodeViewWrapper>
+
+      {/* Modal - Rendered via Portal inside the component logic */}
+      <IndicatorInfoModal isOpen={showInfoModal} onClose={() => setShowInfoModal(false)} />
+    </>
   );
 };
 
@@ -99,7 +270,7 @@ const DataTag = Node.create({
 });
 
 // ----------------------------------------------------------------------
-// 1. CHART COMPONENT (Node View) - Kept custom for Charts
+// 2. CHART COMPONENT (Node View) - Kept custom for Charts
 // ----------------------------------------------------------------------
 
 const ChartComponent = (props: any) => {
@@ -222,12 +393,12 @@ const ChartExtension = Node.create({
 });
 
 // ----------------------------------------------------------------------
-// 2. TABLE SETTINGS (Native TipTap Table)
+// 3. TABLE SETTINGS (Native TipTap Table)
 // ----------------------------------------------------------------------
 // No custom NodeView needed for native table, just config
 
 // ----------------------------------------------------------------------
-// 3. CHART SETTINGS MODAL
+// 4. CHART SETTINGS MODAL
 // ----------------------------------------------------------------------
 const ChartSettingsModal: React.FC<ChartSettingsModalProps> = ({ isOpen, onClose, initialSettings, onSave }) => {
   const [title, setTitle] = useState(initialSettings.title);
@@ -284,7 +455,7 @@ const ChartSettingsModal: React.FC<ChartSettingsModalProps> = ({ isOpen, onClose
 };
 
 // ----------------------------------------------------------------------
-// 4. MAIN EDITOR COMPONENT
+// 5. MAIN EDITOR COMPONENT
 // ----------------------------------------------------------------------
 
 const ReportEditor: React.FC<ReportEditorProps> = ({ onBack }) => {
