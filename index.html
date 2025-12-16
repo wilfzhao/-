@@ -6,6 +6,8 @@
     <title>Smart Hospital Management Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Add Typography plugin for Tailwind for better editor styling -->
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <style>
       :root {
         color-scheme: light; /* Force light mode for standard form controls */
@@ -30,14 +32,88 @@
       ::-webkit-scrollbar-thumb:hover {
         background: #aaa;
       }
+      /* TipTap Editor Specific Styles */
+      .ProseMirror:focus {
+        outline: none;
+      }
+      .ProseMirror p.is-editor-empty:first-child::before {
+        content: attr(data-placeholder);
+        float: left;
+        color: #adb5bd;
+        pointer-events: none;
+        height: 0;
+      }
+      
+      /* TipTap Table Styles */
+      .ProseMirror table {
+        border-collapse: collapse;
+        table-layout: fixed;
+        width: 100%;
+        margin: 0;
+        overflow: hidden;
+      }
+      
+      .ProseMirror td,
+      .ProseMirror th {
+        min-width: 1em;
+        border: 1px solid #d1d5db;
+        padding: 8px;
+        vertical-align: top;
+        box-sizing: border-box;
+        position: relative;
+      }
+      
+      .ProseMirror th {
+        font-weight: bold;
+        text-align: left;
+        background-color: #f9fafb;
+      }
+      
+      .ProseMirror .selectedCell:after {
+        z-index: 2;
+        position: absolute;
+        content: "";
+        left: 0; right: 0; top: 0; bottom: 0;
+        background: rgba(59, 130, 246, 0.1);
+        pointer-events: none;
+      }
+      
+      .ProseMirror .column-resize-handle {
+        position: absolute;
+        right: -2px;
+        top: 0;
+        bottom: -2px;
+        width: 4px;
+        background-color: #adf;
+        pointer-events: none;
+      }
     </style>
   <script type="importmap">
 {
   "imports": {
-    "react-dom/": "https://esm.sh/react-dom@^19.2.1/",
-    "lucide-react": "https://esm.sh/lucide-react@^0.559.0",
-    "react/": "https://esm.sh/react@^19.2.1/",
-    "react": "https://esm.sh/react@^19.2.1"
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "react/": "https://esm.sh/react@18.2.0/",
+    "react-dom/": "https://esm.sh/react-dom@18.2.0/",
+    "lucide-react": "https://esm.sh/lucide-react@0.263.1",
+    "@tiptap/core": "https://esm.sh/@tiptap/core@2.4.0",
+    "@tiptap/react": "https://esm.sh/@tiptap/react@2.4.0?deps=react@18.2.0,react-dom@18.2.0,@tiptap/core@2.4.0",
+    "@tiptap/extension-document": "https://esm.sh/@tiptap/extension-document@2.4.0?deps=@tiptap/core@2.4.0",
+    "@tiptap/extension-paragraph": "https://esm.sh/@tiptap/extension-paragraph@2.4.0?deps=@tiptap/core@2.4.0",
+    "@tiptap/extension-text": "https://esm.sh/@tiptap/extension-text@2.4.0?deps=@tiptap/core@2.4.0",
+    "@tiptap/extension-heading": "https://esm.sh/@tiptap/extension-heading@2.4.0?deps=@tiptap/core@2.4.0",
+    "@tiptap/extension-bold": "https://esm.sh/@tiptap/extension-bold@2.4.0?deps=@tiptap/core@2.4.0",
+    "@tiptap/extension-italic": "https://esm.sh/@tiptap/extension-italic@2.4.0?deps=@tiptap/core@2.4.0",
+    "@tiptap/extension-underline": "https://esm.sh/@tiptap/extension-underline@2.4.0?deps=@tiptap/core@2.4.0",
+    "@tiptap/extension-text-align": "https://esm.sh/@tiptap/extension-text-align@2.4.0?deps=@tiptap/core@2.4.0",
+    "@tiptap/extension-placeholder": "https://esm.sh/@tiptap/extension-placeholder@2.4.0?deps=@tiptap/core@2.4.0",
+    "@tiptap/extension-history": "https://esm.sh/@tiptap/extension-history@2.4.0?deps=@tiptap/core@2.4.0",
+    "@tiptap/extension-bullet-list": "https://esm.sh/@tiptap/extension-bullet-list@2.4.0?deps=@tiptap/core@2.4.0",
+    "@tiptap/extension-list-item": "https://esm.sh/@tiptap/extension-list-item@2.4.0?deps=@tiptap/core@2.4.0",
+    "@tiptap/extension-table": "https://esm.sh/@tiptap/extension-table@2.4.0?deps=@tiptap/core@2.4.0",
+    "@tiptap/extension-table-row": "https://esm.sh/@tiptap/extension-table-row@2.4.0?deps=@tiptap/core@2.4.0",
+    "@tiptap/extension-table-cell": "https://esm.sh/@tiptap/extension-table-cell@2.4.0?deps=@tiptap/core@2.4.0",
+    "@tiptap/extension-table-header": "https://esm.sh/@tiptap/extension-table-header@2.4.0?deps=@tiptap/core@2.4.0"
   }
 }
 </script>
